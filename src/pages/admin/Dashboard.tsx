@@ -5,6 +5,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import AdminProtected from "@/components/AdminProtected";
+import CourseTable from "@/components/admin/CourseTable";
+import TimetableTable from "@/components/admin/TimetableTable";
+import DashboardHeader from "@/components/admin/DashboardHeader";
 
 // Types
 interface Course {
@@ -91,19 +94,7 @@ const AdminDashboard = () => {
     <AdminProtected>
       <div className="min-h-screen bg-gray-100">
         <div className="container mx-auto px-4 py-8">
-          <header className="flex justify-between items-center mb-8 bg-white p-4 rounded-lg shadow">
-            <h1 className="text-2xl font-bold text-blue-800">Admin Dashboard</h1>
-            <div className="flex space-x-4">
-              <Link to="/">
-                <Button variant="outline" className="border-blue-500 text-blue-500">
-                  View Public Site
-                </Button>
-              </Link>
-              <Button variant="destructive" onClick={handleLogout}>
-                Logout
-              </Button>
-            </div>
-          </header>
+          <DashboardHeader onLogout={handleLogout} />
 
           <Tabs defaultValue="courses" className="w-full">
             <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
@@ -121,64 +112,11 @@ const AdminDashboard = () => {
                 </Link>
               </div>
 
-              {isLoading ? (
-                <div className="text-center py-12">
-                  <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
-                  <p className="mt-2 text-gray-600">Loading courses...</p>
-                </div>
-              ) : (
-                <div className="bg-white rounded-lg shadow overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course Name</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Degree</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Professor</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {courses.map((course) => (
-                          <tr key={course.id}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                              {course.course_name}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {course.degree}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {course.professor}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {course.location}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              <div className="flex space-x-2">
-                                <Link to={`/admin/courses/edit/${course.id}`}>
-                                  <Button variant="outline" size="sm" className="border-blue-500 text-blue-500">
-                                    Edit
-                                  </Button>
-                                </Link>
-                                <Button variant="destructive" size="sm" onClick={() => handleDeleteCourse(course.id)}>
-                                  Delete
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  
-                  {courses.length === 0 && (
-                    <div className="text-center py-8">
-                      <p className="text-gray-500">No courses available. Add a course to get started.</p>
-                    </div>
-                  )}
-                </div>
-              )}
+              <CourseTable 
+                courses={courses}
+                isLoading={isLoading}
+                onDeleteCourse={handleDeleteCourse}
+              />
             </TabsContent>
 
             <TabsContent value="timetable" className="space-y-6">
@@ -191,67 +129,12 @@ const AdminDashboard = () => {
                 </Link>
               </div>
 
-              {isLoading ? (
-                <div className="text-center py-12">
-                  <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
-                  <p className="mt-2 text-gray-600">Loading timetable entries...</p>
-                </div>
-              ) : (
-                <div className="bg-white rounded-lg shadow overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Day</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Time</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Time</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {timetableEntries.map((entry) => {
-                          const course = courses.find(c => c.id === entry.course_id);
-                          return (
-                            <tr key={entry.id}>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                {course ? course.course_name : "Unknown Course"}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {entry.day_of_week}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {entry.start_time}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {entry.end_time}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                <div className="flex space-x-2">
-                                  <Link to={`/admin/timetable/edit/${entry.id}`}>
-                                    <Button variant="outline" size="sm" className="border-blue-500 text-blue-500">
-                                      Edit
-                                    </Button>
-                                  </Link>
-                                  <Button variant="destructive" size="sm" onClick={() => handleDeleteTimetableEntry(entry.id)}>
-                                    Delete
-                                  </Button>
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                  
-                  {timetableEntries.length === 0 && (
-                    <div className="text-center py-8">
-                      <p className="text-gray-500">No timetable entries available. Add an entry to get started.</p>
-                    </div>
-                  )}
-                </div>
-              )}
+              <TimetableTable 
+                timetableEntries={timetableEntries}
+                courses={courses}
+                isLoading={isLoading}
+                onDeleteTimetableEntry={handleDeleteTimetableEntry}
+              />
             </TabsContent>
           </Tabs>
         </div>
